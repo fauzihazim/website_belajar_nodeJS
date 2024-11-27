@@ -1,9 +1,126 @@
 import { pool } from '../config/db.js';
+import Fuse from 'fuse.js';
 
 export const getCourses = async (req, res) => {
-    const [course] = await pool.query("select * from course");
-    res.status(200).json({Status: "success", course});
+    let [course] = await pool.query("select * from course");
+    // res.status(200).json({Status: "success", course});
+    const inputs = req.query;
+    const { search, price, name, sort } = inputs;
+    // Search
+    if (search) {
+        course = courseSearch(search, course);
+    }
+    // Filter
+    if (price || name) {
+        course = courseFilter(price, name, course);
+    }
+    // Sorting
+    if (sort) {
+        course = courseSort(sort, course);
+    }
+    course.length !== 0 ? res.status(200).json({Status: "success", course: course}) : res.status(404).json({Status: "failed", message: "course is not found"});
 };
+
+
+const courseSearch = (search, courses) => {
+    console.log("Search key is: ", search);
+    const fuseOptions = {
+        keys: [
+            "courseName"
+        ]
+    };
+    const fuse = new Fuse(courses, fuseOptions);
+    courses = fuse.search(search);
+    return courses.map(x => x.item);
+}
+
+const courseFilter = (price, name, courses) => {
+    let filters = {};
+    price ? filters.price = price : null;
+    name ? filters.courseName = name : null;
+    courses = courses.filter(user => {
+        let isValid = true;
+        for (let key in filters) {
+            isValid = isValid && user[key] == filters[key];
+        }
+        return isValid;
+    });
+    return courses;
+}
+
+const courseSort = (sort, courses) => {
+    const sortArray = sort.split(" ");
+    const sortBy = {};
+    for (let i = 0; i < sortArray.length; i += 2) {
+        sortBy[sortArray[i]] = sortArray[i + 1];
+    }
+    Array.prototype.keySort = function(keys) {
+        keys = keys || {};
+        var obLen = function(obj) {
+            var size = 0, key;
+            for (key in obj) {
+            if (obj.hasOwnProperty(key))
+                size++;
+            }
+            return size;
+        };
+        var obIx = function(obj, ix) {
+            var size = 0, key;
+            for (key in obj) {
+                if (obj.hasOwnProperty(key)) {
+                    if (size === ix) return key;
+                    size++;
+                }
+            }
+            return false;
+        };
+        var keySort = function(a, b, d) {
+            d = d !== null ? d : 1;
+            if (a === b) return 0;
+            return a > b ? 1 * d : -1 * d;
+        };
+        
+        var KL = obLen(keys);
+        
+        if (!KL) return this.sort(keySort);
+        
+        for ( var k in keys) {
+            // asc unless desc or skip
+            keys[k] = keys[k] === 'desc' || keys[k] === -1  ? -1 : (keys[k] === 'skip' || keys[k] === 0 ? 0 : 1);
+        }
+        
+        this.sort(function(a, b) {
+            var sorted = 0, ix = 0;
+            while (sorted === 0 && ix < KL) {
+                var k = obIx(keys, ix);
+                if (k) {
+                    var dir = keys[k];
+                    sorted = keySort(a[k], b[k], dir);
+                    ix++;
+                }
+            }
+            return sorted;
+        });
+        return this;
+    };
+    const print = (obj, delp, delo, ind) => {
+        delp = delp!=null ? delp : "\t"; // property delimeter
+        delo = delo!=null ? delo : "\n"; // object delimeter
+        ind = ind!=null ? ind : " "; // indent; ind+ind geometric addition not great for deep objects
+        var str='';
+    
+        for(var prop in obj){
+            if(typeof obj[prop] === 'string' || typeof obj[prop] === 'number')  {
+                var q = typeof obj[prop] === 'string' ? "" : ""; // make this "'" to quote strings
+                str += ind + prop + ': ' + q + obj[prop] + q + '; ' + delp;
+            } else  {
+                str += ind + prop + ': {'+ delp + print(obj[prop],delp,delo,ind+ind) + ind + '}' + delo;
+            }
+        }
+        return str;
+    };
+    return courses.keySort(sortBy);
+}
 
 export const getCourse = async (req, res) => {
     const id = parseInt(req.params.id);

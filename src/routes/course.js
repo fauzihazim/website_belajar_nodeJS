@@ -5,7 +5,8 @@ const router = express.Router();
 
 router.get('/course', getCourses);
 router.get('/course/:id', authenticateToken, getCourse);
-router.post('/course', [authenticateToken, isAdmin], addCourse);
+// router.post('/course', [authenticateToken, isAdmin], addCourse);
+router.post('/course', addCourse);
 router.put('/course/:id', editCourse);
 router.delete('/course/:id', deleteCourse);
 
