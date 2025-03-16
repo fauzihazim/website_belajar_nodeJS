@@ -1,6 +1,6 @@
 create database videoBelajar;
 
-use videoBelajar;
+use videobelajar;
 
 create table course (
 	courseId int not null,

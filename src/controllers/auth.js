@@ -23,19 +23,13 @@ export const register = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
     const now = moment();
     const token = generateVerificationToken();
-    console.log("JTW token is ", token);
-    // const now = moment();
+    console.log("Verification token is ", token);
     try {
-        // const generate = generateToken();
-        // console.log(generate);
         await pool.query(`insert into users (username, password, email, fullName, registerAt, verificationToken) values (?, ?, ?, ?, ?, ?)`, [username, hashedPassword, email, fullName, now.format('YYYY-MM-DD HH:mm:ss'), token]);
-        // console.log("token: ", generateToken());
-    // try {
-    //     await pool.query(`insert into users (username, password, email, fullname, registerToken) values (?, ?, ?, ?, ?, ?)`, [username, hashedPassword, email, fullname, token]);
         sendEmail(req, res, email, token);
         res.status(201).json({ message: `User ${username} registered successfully`});
     } catch(error) {
-        res.status(500).json({ message: "Error registering user" });
+        res.status(500).json({ message: "Error registering user", errorMessage: error.message });
     }
 };
 
@@ -45,16 +39,14 @@ const generateVerificationToken = () => {
 
 export const login = async (req, res) => {
     const { username, password } = req.body;
-    // console.log("username: ", username, " password: ", password);
-    
     try {
         const [results] = await pool.query("select * from users where username = ?", [username]);
         const user = results[0];
-        // !user.verificationAt ? res.status(401).json({ message: "Please verification your account" }) : '';
         if (user && await bcrypt.compare(password, user.password)) {
             const accessToken = generateAccessToken({ username: user.username, email: user.email, isAdmin: user.is_admin, verificationAt: user.verificationAt });
             const refreshToken = generateRefreshToken({ username: user.username, email: user.email, isAdmin: user.is_admin, verificationAt: user.verificationAt });
-            // refreshTokens.push(refreshToken); // Store refresh token
+            // const accessToken = generateAccessToken({ username: user.username, email: user.email, isAdmin: user.is_admin });
+            // const refreshToken = generateRefreshToken({ username: user.username, email: user.email, isAdmin: user.is_admin });
             res.status(200).json({ accessToken, refreshToken });
         } else {
             res.status(401).json({ message: "Invalid credential" });

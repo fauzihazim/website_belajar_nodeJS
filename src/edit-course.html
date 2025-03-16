@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Course</title>
+    <script>
+        // Ambil ID dari query string
+        const urlParams = new URLSearchParams(window.location.search);
+        const id = urlParams.get('id');
+        console.log("ID ", id);
+        
+
+        // Data yang akan dikirim
+        const data = {
+            courseName: "courseNameEdited1",
+            price: 0,
+            tutorId: 90
+        };
+
+        // Jalankan permintaan PUT saat halaman dimuat
+        fetch(`http://localhost:3001/courses/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert('Permintaan PUT berhasil!');
+            console.log(data);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    </script>
+</head>
+<body>
+    <p>Permintaan PUT sedang diproses...</p>
+</body>
+</html>

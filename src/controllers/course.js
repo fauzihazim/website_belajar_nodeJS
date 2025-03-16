@@ -3,21 +3,17 @@ import Fuse from 'fuse.js';
 
 export const getCourses = async (req, res) => {
     let [course] = await pool.query("select * from course");
-    // res.status(200).json({Status: "success", course});
     const inputs = req.query;
     const { search, price, name, sort } = inputs;
-    // Search
     if (search) {
-        course = courseSearch(search, course);
-    }
-    // Filter
+        course = courseSearch(search, course);          // Search
+    };
     if (price || name) {
-        course = courseFilter(price, name, course);
-    }
-    // Sorting
+        course = courseFilter(price, name, course);     // Filter
+    };
     if (sort) {
-        course = courseSort(sort, course);
-    }
+        course = courseSort(sort, course);              // Sorting
+    };
     course.length !== 0 ? res.status(200).json({Status: "success", course: course}) : res.status(404).json({Status: "failed", message: "course is not found"});
 };
 
@@ -134,11 +130,15 @@ export const getCourse = async (req, res) => {
 
 export const addCourse = async (req, res) => {
     const { courseName, price, tutorId } = req.body;
-    if (courseName && price && tutorId) {
-        await pool.query(`insert into course (courseName, price, tutorId) values (?, ?, ?)`, [courseName, price, tutorId])
-        res.status(201).json({Status: "success", message: `Successfully added courseName: ${courseName}`});
-    } else {
-        res.status(424).json({Status: "failed", message: "Input courseName, price, and tutorId shouldn't be null"});
+    try {
+        if (courseName && price && tutorId) {
+            await pool.query(`insert into course (courseName, price, tutorId) values (?, ?, ?)`, [courseName, price, tutorId])
+            return res.status(201).json({Status: "success", message: `Successfully added courseName: ${courseName}`});
+        } else {
+            return res.status(424).json({Status: "failed", message: "Input courseName, price, and tutorId shouldn't be null"});
+        }
+    } catch (error) {
+        return res.status(500).json({Status: "failed", message: error.message})
     }
 };
 
@@ -153,6 +153,30 @@ export const editCourse = async (req, res) => {
     } else {
         res.status(422).json({Status: "failed", message: "Failed to input"});
     }
+};
+
+export const editCourses = async (req, res) => {
+    const id = parseInt(req.params.id);
+    // const { courseName, price, tutorId } = {"courseNameEdited", 0, 1};
+    const courseName = "courseNameEdited1";
+    const price = 0;
+    const tutorId = 90;
+    try {
+        await pool.query(`UPDATE course
+        SET courseName = ?, price = ?, tutorId = ?
+        WHERE courseId = ?`, [courseName, price, tutorId, id]);
+        res.status(201).json({Status: "success", message: `Successfully edit courseName: ${courseName}`});
+    } catch (error) {
+        res.status(422).json({Status: "failed", message: error.message});
+    }
+    // if (courseName && price && tutorId) {
+    //     await pool.query(`UPDATE course
+    //     SET courseName = ?, price = ?, tutorId = ?
+    //     WHERE courseId = ?`, [courseName, price, tutorId, id]);
+    //     res.status(201).json({Status: "success", message: `Successfully edit courseName: ${courseName}`});
+    // } else {
+    //     res.status(422).json({Status: "failed", message: "Failed to input"});
+    // }
 };
 
 export const deleteCourse = async (req, res) => {
