@@ -26,7 +26,7 @@ export const register = async (req, res) => {
     console.log("Verification token is ", token);
     try {
         await pool.query(`insert into users (username, password, email, fullName, registerAt, verificationToken) values (?, ?, ?, ?, ?, ?)`, [username, hashedPassword, email, fullName, now.format('YYYY-MM-DD HH:mm:ss'), token]);
-        sendEmail(req, res, email, token);
+        sendEmail(email, token);
         res.status(201).json({ message: `User ${username} registered successfully`});
     } catch(error) {
         res.status(500).json({ message: "Error registering user", errorMessage: error.message });
@@ -57,7 +57,8 @@ export const login = async (req, res) => {
 }
 
 export const verifyAccount = async (req, res) => {
-    const token = req.query.token;
+    // const token = req.query.token;
+    const token = req.params.token;
     // const token = req.body.token;
     console.log("The token is ", token);
     
@@ -66,6 +67,6 @@ export const verifyAccount = async (req, res) => {
         const [result] = await pool.execute("UPDATE users SET verificationAt = ? WHERE verificationToken = ?", [now.format('YYYY-MM-DD HH:mm:ss'), token]);
         result.affectedRows ? res.status(201).json({ message: "Success to verify", result: result.affectedRows }) : res.status(404).json({ message: "Invalid Verification Token" });
     } catch (error) {
-        res.status(400).json({ message: "Failed to verify" })
+        res.status(400).json({ message: "Failed to verify", error: error.message })
     }
 }
