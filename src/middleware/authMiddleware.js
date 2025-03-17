@@ -1,4 +1,6 @@
 import jwt from 'jsonwebtoken';
+import { body, validationResult } from 'express-validator';
+
 export const authenticateToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
@@ -25,3 +27,11 @@ export const isAdmin = (req, res, next) => {
     }
     next();
 };
+
+// For validate the req.body
+export const validateRegister = [
+    body('username').notEmpty().escape().withMessage('Username is required'),
+    body('password').isLength({ min: 6 }).escape().withMessage('Password must be at least 6 characters long'),
+    body('email').isEmail().escape().withMessage('Invalid email address'),
+    body('fullName').notEmpty().escape().withMessage('Full name is required'),
+];

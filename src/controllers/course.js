@@ -169,14 +169,6 @@ export const editCourses = async (req, res) => {
     } catch (error) {
         res.status(422).json({Status: "failed", message: error.message});
     }
-    // if (courseName && price && tutorId) {
-    //     await pool.query(`UPDATE course
-    //     SET courseName = ?, price = ?, tutorId = ?
-    //     WHERE courseId = ?`, [courseName, price, tutorId, id]);
-    //     res.status(201).json({Status: "success", message: `Successfully edit courseName: ${courseName}`});
-    // } else {
-    //     res.status(422).json({Status: "failed", message: "Failed to input"});
-    // }
 };
 
 export const deleteCourse = async (req, res) => {
