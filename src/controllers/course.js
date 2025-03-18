@@ -213,15 +213,27 @@ export const editCourse = async (req, res) => {
     };
     const id = parseInt(req.params.id);
     const { courseName, price, tutorId } = req.body;
-    if (courseName && price && tutorId) {
-        await pool.query(`UPDATE course
-        SET courseName = ?, price = ?, tutorId = ?
-        WHERE courseId = ?`, [courseName, price, tutorId, id]);
-        res.status(201).json({
-            status: "success",
-            message: `Successfully edit courseName: ${courseName}`
-        });
-    } else {
+    try {
+        if (courseName && price && tutorId) {
+            const [result] = await pool.query(`UPDATE course
+            SET courseName = ?, price = ?, tutorId = ?
+            WHERE courseId = ?`, [courseName, price, tutorId, id]);
+            result.affectedRows
+            ? res.status(201).json({
+                status: "success",
+                message: `Successfully edit courseName: ${courseName}`
+            })
+            : res.status(404).json({
+                status: "failed",
+                message: "Resource to update doesn't exists"
+            });
+        } else {
+            res.status(400).json({
+                status: "failed",
+                message: "Input courseName, price, and tutorId shouldn't be null"
+            });
+        }
+    } catch (error) {
         res.status(500).json({
             status: "failed",
             message: "Internal Server Error"
