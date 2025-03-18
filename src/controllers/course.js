@@ -1,20 +1,45 @@
 import { pool } from '../config/db.js';
+import { validationResult } from 'express-validator';
 import Fuse from 'fuse.js';
 
 export const getCourses = async (req, res) => {
-    let [course] = await pool.query("select * from course");
+    const error = validationResult(req);
+    if (!error.isEmpty()) {
+        return res.status(400).json({
+            status: "failed",
+            message: error.array()[0].msg 
+        });
+    }
     const inputs = req.query;
     const { search, price, name, sort } = inputs;
-    if (search) {
-        course = courseSearch(search, course);          // Search
-    };
-    if (price || name) {
-        course = courseFilter(price, name, course);     // Filter
-    };
-    if (sort) {
-        course = courseSort(sort, course);              // Sorting
-    };
-    course.length !== 0 ? res.status(200).json({Status: "success", course: course}) : res.status(404).json({Status: "failed", message: "course is not found"});
+    console.log("The Sort is ", sort);
+    
+    try {
+        let [course] = await pool.query("select * from course");
+        if (search) {
+            course = courseSearch(search, course);          // Search
+        };
+        if (price || name) {
+            course = courseFilter(price, name, course);     // Filter
+        };
+        if (sort) {
+            course = courseSort(sort, course);              // Sorting
+        };
+        course.length !== 0
+        ? res.status(200).json({
+            status: "success",
+            data: course
+        })
+        : res.status(404).json({
+            status: "failed",
+            message: "course is not found"
+        });
+    } catch (error) {
+        res.status(500).json({
+            status: "failed",
+            message: "Internal Server Error"
+        });
+    }
 };
 
 
@@ -119,26 +144,62 @@ const courseSort = (sort, courses) => {
 }
 
 export const getCourse = async (req, res) => {
+    const error = validationResult(req);
+    if (!error.isEmpty()) {
+        return res.status(400).json({
+            status: "failed",
+            message: error.array()[0].msg 
+        });
+    };
     const id = parseInt(req.params.id);
-    const [course] = await pool.query(`select * from course where courseId = ?`, [id]);
-    if (course.length !== 0) {
-        res.status(200).json({Status: "success", course});
-    } else {
-        res.status(404).json({Status: "failed", message: "course is not found"});
+    try {
+        const [course] = await pool.query(`select * from course where courseId = ?`, [id]);
+        if (course.length !== 0) {
+            res.status(200).json({
+                status: "success",
+                data: course
+            });
+        } else {
+            res.status(404).json({
+                status: "failed",
+                message: "course is not found"
+            });
+        }
+    } catch (error) {
+        res.status(500).json({
+            status: "failed",
+            message: "Internal Server Error"
+        });
     }
 };
 
 export const addCourse = async (req, res) => {
+    const error = validationResult(req);
+    if (!error.isEmpty()) {
+        return res.status(400).json({
+            status: "failed",
+            message: error.array()[0].msg 
+        });
+    };
     const { courseName, price, tutorId } = req.body;
     try {
         if (courseName && price && tutorId) {
             await pool.query(`insert into course (courseName, price, tutorId) values (?, ?, ?)`, [courseName, price, tutorId])
-            return res.status(201).json({Status: "success", message: `Successfully added courseName: ${courseName}`});
+            res.status(201).json({
+                status: "success",
+                message: `Successfully added courseName: ${courseName}`
+            });
         } else {
-            return res.status(424).json({Status: "failed", message: "Input courseName, price, and tutorId shouldn't be null"});
+            res.status(424).json({
+                status: "failed",
+                message: "Input courseName, price, and tutorId shouldn't be null"
+            });
         }
     } catch (error) {
-        return res.status(500).json({Status: "failed", message: error.message})
+        res.status(500).json({
+            status: "failed",
+            message: "Internal Server Error"
+        });
     }
 };
 
@@ -149,30 +210,23 @@ export const editCourse = async (req, res) => {
         await pool.query(`UPDATE course
         SET courseName = ?, price = ?, tutorId = ?
         WHERE courseId = ?`, [courseName, price, tutorId, id]);
-        res.status(201).json({Status: "success", message: `Successfully edit courseName: ${courseName}`});
+        res.status(201).json({
+            status: "success",
+            message: `Successfully edit courseName: ${courseName}`
+        });
     } else {
-        res.status(422).json({Status: "failed", message: "Failed to input"});
-    }
-};
-
-export const editCourses = async (req, res) => {
-    const id = parseInt(req.params.id);
-    // const { courseName, price, tutorId } = {"courseNameEdited", 0, 1};
-    const courseName = "courseNameEdited1";
-    const price = 0;
-    const tutorId = 90;
-    try {
-        await pool.query(`UPDATE course
-        SET courseName = ?, price = ?, tutorId = ?
-        WHERE courseId = ?`, [courseName, price, tutorId, id]);
-        res.status(201).json({Status: "success", message: `Successfully edit courseName: ${courseName}`});
-    } catch (error) {
-        res.status(422).json({Status: "failed", message: error.message});
+        res.status(500).json({
+            status: "failed",
+            message: "Internal Server Error"
+        });
     }
 };
 
 export const deleteCourse = async (req, res) => {
     const id = parseInt(req.params.id);
     await pool.query('DELETE FROM course WHERE courseId = ?', [id]);
-    res.status(201).json({Status: "success", message: "Succesfully delete the course"});
-}
+    res.status(201).json({
+        status: "success",
+        message: "Succesfully delete the course"
+    });
+};

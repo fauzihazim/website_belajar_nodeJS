@@ -1,15 +1,15 @@
 import express from 'express';
-import { getCourses, getCourse, addCourse, editCourse, editCourses, deleteCourse } from '../controllers/course.js';
+import { getCourses, getCourse, addCourse, editCourse, deleteCourse } from '../controllers/course.js';
 import { authenticateToken, isAdmin } from '../middleware/authMiddleware.js';
+import { validateEditCourse, validateGetCourse, validateGetCourses, validatePostCourse } from '../middleware/courseMiddleware.js';
 const router = express.Router();
 
-router.get('/course', getCourses);
-router.get('/course/:id', authenticateToken, getCourse);
+router.get('/courses', validateGetCourses, getCourses);
+router.get('/course/:id', authenticateToken, validateGetCourse, getCourse);
 // router.post('/course', [authenticateToken, isAdmin], addCourse);
-router.post('/course', addCourse);
+router.post('/course', authenticateToken, isAdmin, validatePostCourse, addCourse);
 // router.post('/course', addCourse);
-router.put('/course/:id', editCourse);
-router.put('/courses/:id', editCourses);
+router.put('/course/:id', authenticateToken, isAdmin, validateEditCourse, editCourse);
 router.delete('/course/:id', deleteCourse);
 
 export default router;

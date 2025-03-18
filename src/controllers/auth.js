@@ -18,7 +18,7 @@ export const register = async (req, res) => {
     const error = validationResult(req);
     if (!error.isEmpty()) {
         return res.status(400).json({
-            status: "Failed",
+            status: "failed",
             message: error.array()[0].msg 
         });
     }
@@ -38,13 +38,13 @@ export const register = async (req, res) => {
     } catch(error) {
         if (error.code === "ER_DUP_ENTRY") {
             return res.status(409).json({
-                status: "Failed",
+                status: "failed",
                 message: "Username or email already exists"
             });
         }
         console.error("Error during registration:", error);
         res.status(500).json({
-            status: "Failed",
+            status: "failed",
             message: "Internal Server Error"
         });
     }
@@ -55,23 +55,42 @@ const generateVerificationToken = () => {
 };
 
 export const login = async (req, res) => {
+    const error = validationResult(req);
+    if (!error.isEmpty()) {
+        return res.status(400).json({
+            status: "failed",
+            message: error.array()[0].msg 
+        });
+    }
     const { username, password } = req.body;
     try {
         const [results] = await pool.query("select * from users where username = ?", [username]);
         const user = results[0];
-        if (!user.verificationAt) {
-            throw new Error("Your account isn't verified yet !");
-        }
         if (user && await bcrypt.compare(password, user.password)) {
+            if (!user.verificationAt) {
+                throw new Error("Your account isn't verified yet !");
+            }
             const accessToken = generateAccessToken({ username: user.username, email: user.email, isAdmin: user.is_admin, verificationAt: user.verificationAt });
             const refreshToken = generateRefreshToken({ username: user.username, email: user.email, isAdmin: user.is_admin, verificationAt: user.verificationAt });
-            res.status(200).json({ accessToken, refreshToken });
+            res.status(200).json({
+                status: "Success",
+                data: {
+                    accessToken, 
+                    refreshToken
+                }
+            });
         } else {
-            res.status(401).json({ message: "Invalid credential" });
+            res.status(401).json({
+                status: "failed",
+                message: "Invalid credential"
+            });
         }
     } catch (error) {
         console.log("Login error, ", error);
-        res.status(500).json({ message: "Login error", errorMessage: error.message });
+        res.status(500).json({
+            status: "Login error",
+            message: "Internal Server Error"
+        });
     }
 }
 
@@ -79,7 +98,7 @@ export const verifyAccount = async (req, res) => {
     const results = validationResult(req);
     if (!results.isEmpty()) {
         return res.status(400).json({
-            status: "Failed",
+            status: "failed",
             message: results.array()[0].msg
         });
     }
@@ -92,12 +111,12 @@ export const verifyAccount = async (req, res) => {
             message: "Your account has been verified successfully"
         })
         : res.status(404).json({
-            status: "Failed",
+            status: "failed",
             message: "Invalid Verification Token"
         });
     } catch (error) {
         res.status(500).json({
-            status: "Failed",
+            status: "failed",
             message: "Internal Server Error"
         });
     }
