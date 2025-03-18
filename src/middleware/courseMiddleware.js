@@ -82,3 +82,11 @@ export const validateEditCourse = [
         .isInt().withMessage('Invalid Id')
         .escape()
 ]
+
+export const validateDeleteCourse = [
+    param('id')
+        .trim()
+        .notEmpty().withMessage('Id is required')
+        .isInt().withMessage('Invalid Id')
+        .escape()
+]

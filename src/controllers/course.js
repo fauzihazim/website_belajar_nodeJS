@@ -230,6 +230,13 @@ export const editCourse = async (req, res) => {
 };
 
 export const deleteCourse = async (req, res) => {
+    const error = validationResult(req);
+    if (!error.isEmpty()) {
+        return res.status(400).json({
+            status: "failed",
+            message: error.array()[0].msg 
+        });
+    };
     const id = parseInt(req.params.id);
     await pool.query('DELETE FROM course WHERE courseId = ?', [id]);
     res.status(201).json({
