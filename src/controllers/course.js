@@ -204,6 +204,13 @@ export const addCourse = async (req, res) => {
 };
 
 export const editCourse = async (req, res) => {
+    const error = validationResult(req);
+    if (!error.isEmpty()) {
+        return res.status(400).json({
+            status: "failed",
+            message: error.array()[0].msg 
+        });
+    };
     const id = parseInt(req.params.id);
     const { courseName, price, tutorId } = req.body;
     if (courseName && price && tutorId) {

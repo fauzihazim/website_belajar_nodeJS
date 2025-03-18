@@ -61,5 +61,24 @@ export const validatePostCourse = [
 ]
 
 export const validateEditCourse = [
-    
+    body('courseName')
+        .notEmpty().withMessage('courseName is required')
+        .isString().withMessage('Invalid courseName')
+        .escape()
+        .trim(),
+    body('price')
+        .notEmpty().withMessage('Price is required')
+        .isInt({ min: 0 }).withMessage("Price has to be minimal 0")
+        .escape()
+        .trim(),
+    body('tutorId')
+        .notEmpty().withMessage("tutorId is required")
+        .isInt({ gt: 0 }).withMessage("tutorId has to be greater than 0")
+        .escape()
+        .trim(),
+    param('id')
+        .trim()
+        .notEmpty().withMessage('Id is required')
+        .isInt().withMessage('Invalid Id')
+        .escape()
 ]
