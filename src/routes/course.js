@@ -4,18 +4,19 @@ import { authenticateToken, isAdmin } from '../middleware/authMiddleware.js';
 import { validateDeleteCourse, validateEditCourse, validateGetCourse, validateGetCourses, validatePostCourse } from '../middleware/courseMiddleware.js';
 import { multerValidator } from '../middleware/multerMiddleware.js';
 import { upload } from '../controllers/multer.js';
+// Initialize Express
 const router = express.Router();
+const app = express();
 
 router.get('/courses', validateGetCourses, getCourses);
 router.get('/course/:id', authenticateToken, validateGetCourse, getCourse);
 // router.post('/course', [authenticateToken, isAdmin], addCourse);
-router.post('/course', authenticateToken, isAdmin, validatePostCourse, addCourse);
+app.post('/course', authenticateToken, isAdmin, upload.array('upload-image', 1), validatePostCourse, addCourse);
+// router.post('/course', authenticateToken, isAdmin, upload.array('upload-image', 1), addCourse);
 // router.post('/course', addCourse);
 router.put('/course/:id', authenticateToken, isAdmin, validateEditCourse, editCourse);
 router.delete('/course/:id', authenticateToken, isAdmin, validateDeleteCourse, deleteCourse);
 
-// Initialize Express
-const app = express();
 app.post('/uploadInCourse', upload.array('upload-image', 1), (req, res) => {
     try {
       if (!req.files.length) {

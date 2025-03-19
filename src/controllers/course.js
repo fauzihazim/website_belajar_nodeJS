@@ -182,6 +182,9 @@ export const addCourse = async (req, res) => {
         });
     };
     const { courseName, price, tutorId } = req.body;
+    const image = req.files;
+    console.log("The Image ", image);
+    
     console.log("Course name ", courseName, " Price ", price, " tutor Id ", tutorId);
     
     try {

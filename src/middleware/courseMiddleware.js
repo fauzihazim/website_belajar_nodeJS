@@ -57,7 +57,15 @@ export const validatePostCourse = [
         .notEmpty().withMessage("tutorId is required")
         .isInt({ gt: 0 }).withMessage("tutorId has to be greater than 0")
         .escape()
-        .trim()
+        .trim(),
+    body('upload-image') // Validate the image file
+        .custom((value, { req }) => {
+            if (!req.files) {
+                throw new Error('Image is required');
+            }
+            return true;
+        }
+    )
 ]
 
 export const validateEditCourse = [
