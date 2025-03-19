@@ -87,9 +87,15 @@ export const login = async (req, res) => {
         }
     } catch (error) {
         console.log("Login error, ", error);
+        if (error.message === "Your account isn't verified yet !") {
+            return res.status(403).json({
+                status: "failed",
+                message: error.message,
+            });
+        }
         res.status(500).json({
-            status: "Login error",
-            message: "Internal Server Error"
+            status: "failed",
+            message: "Internal server error"
         });
     }
 }
@@ -107,7 +113,7 @@ export const verifyAccount = async (req, res) => {
         const [result] = await pool.execute("UPDATE users SET verificationAt = ? WHERE verificationToken = ?", [now.format('YYYY-MM-DD HH:mm:ss'), req.params.token]);
         result.affectedRows
         ? res.status(200).json({
-            status: "Success",
+            status: "success",
             message: "Your account has been verified successfully"
         })
         : res.status(404).json({

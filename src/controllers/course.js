@@ -282,3 +282,8 @@ export const deleteCourse = async (req, res) => {
         });
     }
 };
+
+export const cobaMulter = (req, res) => {
+    console.log("Req File", req.file.destination, "Req Body", req.body)
+    res.send("Upload successfully");
+}
