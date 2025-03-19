@@ -182,6 +182,8 @@ export const addCourse = async (req, res) => {
         });
     };
     const { courseName, price, tutorId } = req.body;
+    console.log("Course name ", courseName, " Price ", price, " tutor Id ", tutorId);
+    
     try {
         if (courseName && price && tutorId) {
             await pool.query(`insert into course (courseName, price, tutorId) values (?, ?, ?)`, [courseName, price, tutorId])
@@ -196,6 +198,12 @@ export const addCourse = async (req, res) => {
             });
         }
     } catch (error) {
+        if (error.code === "ER_DUP_ENTRY") {
+            return res.status(409).json({
+                status: "failed",
+                message: "Course already exists"
+            });
+        };
         res.status(500).json({
             status: "failed",
             message: "Internal Server Error"
@@ -234,6 +242,12 @@ export const editCourse = async (req, res) => {
             });
         }
     } catch (error) {
+        if (error.code === "ER_DUP_ENTRY") {
+            return res.status(409).json({
+                status: "failed",
+                message: "Course already exists"
+            });
+        }
         res.status(500).json({
             status: "failed",
             message: "Internal Server Error"
@@ -250,9 +264,21 @@ export const deleteCourse = async (req, res) => {
         });
     };
     const id = parseInt(req.params.id);
-    await pool.query('DELETE FROM course WHERE courseId = ?', [id]);
-    res.status(201).json({
-        status: "success",
-        message: "Succesfully delete the course"
-    });
+    try {
+        const [result] = await pool.query('DELETE FROM course WHERE courseId = ?', [id]);
+        result.affectedRows
+        ? res.status(201).json({
+            status: "success",
+            message: "Succesfully delete the course"
+        })
+        : res.status(404).json({
+            status: "failed",
+            message: "course is not found"
+        })
+    } catch (error) {
+        res.status(500).json({
+            status: "failed",
+            message: "Internal Server Error"
+        });
+    }
 };
