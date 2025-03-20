@@ -1,7 +1,7 @@
 import express from 'express';
 import { getCourses, getCourse, addCourse, editCourse, deleteCourse } from '../controllers/course.js';
 import { authenticateToken, isAdmin } from '../middleware/authMiddleware.js';
-import { validateDeleteCourse, validateEditCourse, validateGetCourse, validateGetCourses, validatePostCourse } from '../middleware/courseMiddleware.js';
+import { validateDeleteCourse, validateEditCourse, validateGetCourse, validateGetCourses, validatePostCourse, validateTest } from '../middleware/courseMiddleware.js';
 import { multerValidator } from '../middleware/multerMiddleware.js';
 import { upload } from '../controllers/multer.js';
 // Initialize Express
@@ -10,10 +10,7 @@ const app = express();
 
 router.get('/courses', validateGetCourses, getCourses);
 router.get('/course/:id', authenticateToken, validateGetCourse, getCourse);
-// router.post('/course', [authenticateToken, isAdmin], addCourse);
 app.post('/course', authenticateToken, isAdmin, upload.array('upload-image', 1), validatePostCourse, addCourse);
-// router.post('/course', authenticateToken, isAdmin, upload.array('upload-image', 1), addCourse);
-// router.post('/course', addCourse);
 router.put('/course/:id', authenticateToken, isAdmin, validateEditCourse, editCourse);
 router.delete('/course/:id', authenticateToken, isAdmin, validateDeleteCourse, deleteCourse);
 
@@ -38,9 +35,6 @@ app.post('/uploadInCourse', upload.array('upload-image', 1), (req, res) => {
 });
 
 app.use((err, req, res, next) => {
-    console.log('Error Code:', err.code);
-    console.log('Error Message:', err.message);
-    console.log('Full Error Object:', err);
     switch (err.code) {
         case 'LIMIT_FILE_COUNT':
             res.status(400).json({

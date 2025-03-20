@@ -60,12 +60,27 @@ export const validatePostCourse = [
         .trim(),
     body('upload-image') // Validate the image file
         .custom((value, { req }) => {
-            if (!req.files) {
-                throw new Error('Image is required');
+            console.log("validatePostCourse Image", req.files.length);
+            
+            if (req.files.length === 0) {
+                return new Error('Image is required');
             }
             return true;
         }
     )
+]
+
+
+export const validateTest = [
+    body('upload-image') // Validate the image file
+        .custom((value, { req }) => {
+            console.log("Req file: ", req.files);
+            
+            if (req.files === undefined) {
+                throw new Error('Image is requsired');
+            }
+            return true;
+        })
 ]
 
 export const validateEditCourse = [

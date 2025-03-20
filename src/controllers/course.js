@@ -1,6 +1,9 @@
 import { pool } from '../config/db.js';
 import { validationResult } from 'express-validator';
 import Fuse from 'fuse.js';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 export const getCourses = async (req, res) => {
     const error = validationResult(req);
@@ -173,34 +176,65 @@ export const getCourse = async (req, res) => {
     }
 };
 
+const __filename = "src/uploads";
+console.log("Filename ", __filename);
+const __dirname = path.dirname(__filename);
+
 export const addCourse = async (req, res) => {
     const error = validationResult(req);
+    const image = req.files;
+
+    const __filename = "src/uploads";
+    console.log("Filename ", __filename);
+    const __dirname = path.dirname(__filename);
+    
     if (!error.isEmpty()) {
+        if (image && image.length > 0) {
+            const filePath = path.join(__dirname, 'uploads', req.files[0].filename);
+            fs.unlink(filePath, (err) => {
+                if (err) {
+                    console.error("Failed to delete uploaded file:", err);
+                } else {
+                    console.log("Delete Success");
+                }
+            });
+        }
         return res.status(400).json({
             status: "failed",
             message: error.array()[0].msg 
         });
     };
     const { courseName, price, tutorId } = req.body;
-    const image = req.files;
+    
+    console.log("IMG");
+    
     console.log("The Image ", image);
     
-    console.log("Course name ", courseName, " Price ", price, " tutor Id ", tutorId);
+    console.log("Course name ", courseName, " Price ", price, " tutor Id ", tutorId, " req file ", req.files);
     
     try {
-        if (courseName && price && tutorId) {
-            await pool.query(`insert into course (courseName, price, tutorId) values (?, ?, ?)`, [courseName, price, tutorId])
+        if (courseName && price && tutorId && req.files.length === 1) {
+            await pool.query(`insert into course (courseName, price, tutorId, imageLink) values (?, ?, ?, ?)`, [courseName, price, tutorId, req.files[0].path])
             res.status(201).json({
                 status: "success",
                 message: `Successfully added courseName: ${courseName}`
             });
         } else {
-            res.status(424).json({
+            res.status(400).json({
                 status: "failed",
                 message: "Input courseName, price, and tutorId shouldn't be null"
             });
         }
     } catch (error) {
+        // Delete image if failed to add in DB
+        const filePath = path.join(__dirname, 'uploads', req.files[0].filename);
+        fs.unlink(filePath, (err) => {
+            if (err) {
+                console.error("Failed to delete uploaded file:", err);
+            } else {
+                console.log("Delete Success");
+            }
+        });
         if (error.code === "ER_DUP_ENTRY") {
             return res.status(409).json({
                 status: "failed",
