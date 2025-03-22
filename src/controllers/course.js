@@ -185,12 +185,12 @@ export const addCourse = async (req, res) => {
     const image = req.files;
 
     const __filename = "src/uploads";
-    console.log("Filename ", __filename);
+    console.log("Filenames ", __filename);
     const __dirname = path.dirname(__filename);
     
     if (!error.isEmpty()) {
         if (image && image.length > 0) {
-            const filePath = path.join(__dirname, 'uploads', req.files[0].filename);
+            const filePath = path.join(__dirname, 'uploads', image[0].filename);
             fs.unlink(filePath, (err) => {
                 if (err) {
                     console.error("Failed to delete uploaded file:", err);
@@ -214,7 +214,7 @@ export const addCourse = async (req, res) => {
     
     try {
         if (courseName && price && tutorId && req.files.length === 1) {
-            await pool.query(`insert into course (courseName, price, tutorId, imageLink) values (?, ?, ?, ?)`, [courseName, price, tutorId, req.files[0].path])
+            await pool.query(`insert into course (courseName, price, tutorId, imageLink) values (?, ?, ?, ?)`, [courseName, price, tutorId, image[0].path])
             res.status(201).json({
                 status: "success",
                 message: `Successfully added courseName: ${courseName}`

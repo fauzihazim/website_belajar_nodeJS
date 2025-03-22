@@ -23,6 +23,12 @@ app.use(authRouter);
 import multerRouter from './src/routes/multer.js';
 app.use(multerRouter);
 
+import getImage from "./src/routes/getImage.js"; // Import the route
+// app.use(getImage);
+// Use the image route
+app.use("/getImage", getImage);
+
+
 app.listen(process.env.PORT, () => {
     console.log(`Running in port ${process.env.PORT}`);
 });
